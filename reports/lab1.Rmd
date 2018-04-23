@@ -1,0 +1,68 @@
+---
+title: "EDA Sense8"
+output:
+  html_notebook:
+    toc: yes
+    toc_float: yes
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float: yes
+---
+
+```{r setup, echo=FALSE, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(here)
+theme_set(theme_bw())
+```
+
+Analisaremos os episódios das séries: How to Get Away with Murder e Suits. 
+
+```{r}
+dados = read_csv(here("data/series_from_imdb.csv"), 
+                    progress = FALSE,
+                    col_types = cols(.default = col_double(), 
+                                     series_name = col_character(), 
+                                     episode = col_character(), 
+                                     url = col_character(),
+                                     season = col_character())) %>% 
+    filter(series_name %in% c("Two And a Half Men", "The Big Bang Theory","Brooklyn Nine-Nine","Modern Family"))
+```
+
+## Qual é a distribuição de avaliação de cada série e sua média?
+```{r}
+sumarios = dados %>% 
+    group_by(series_name) %>% 
+    summarise(mediana = median(user_rating), 
+              media = mean(user_rating))
+dados %>%
+    ggplot(aes(x = series_name, y = user_rating,  fill="Média")) + 
+    geom_boxplot(width = .5, outlier.color = NA) +
+  stat_summary(fun.y="mean", geom="point", size=3,
+    position=position_dodge(width=0.75), color="black")
+
+```
+## Muda de acordo com as temporadas da série?
+
+```{r}
+sumarios = dados %>% 
+    group_by(series_name) %>% 
+    group_by(season) %>% 
+    mutate (season_rating = round(mean(user_rating),2))
+dados %>% 
+  ggplot(aes(x = season, y = sumarios$season_rating, color = series_name)) + 
+  geom_line() + 
+  geom_point() 
+```
+
+
+## Quantas avaliações temos por episódio? 
+
+Cada episódio foi avaliado por um número diferente de usuários do IMDB. Vejamos como é essa distribuição. 
+
+```{r}
+dados %>% 
+    ggplot(aes(x = season, y = user_votes)) +
+    geom_violin() + 
+    geom_jitter(width = .07) 
+```
