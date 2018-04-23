@@ -46,11 +46,11 @@ dados %>%
 
 ```{r}
 sumarios = dados %>% 
-    group_by(series_name) %>% 
-    group_by(season) %>% 
-    mutate (season_rating = round(mean(user_rating),2))
-dados %>% 
-  ggplot(aes(x = season, y = sumarios$season_rating, color = series_name)) + 
+    group_by(series_name,season) %>% 
+    summarise(
+        season_rating = round(mean(user_rating),2))
+sumarios %>% 
+  ggplot(aes(x = season, y = season_rating, color = series_name)) + 
   geom_line() + 
   geom_point() 
 ```
