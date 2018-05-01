@@ -30,6 +30,9 @@ dados = read_csv(here("data/series_from_imdb.csv"),
 ```
 
 ##2.1 Qual das séries que você escolheu é mais bem avaliada no IMDB? A diferença é grande? Pequena?
+
+>> É legal ter ao menos um plot mostrando todos os pontos, além de sumários como o boxplot e outros.
+
 ```{r}
 sumarios = dados %>% 
     group_by(series_name) %>% 
@@ -38,8 +41,9 @@ sumarios = dados %>%
 dados %>%
     ggplot(aes(x = series_name, y = user_rating,  fill="Média")) + 
     geom_boxplot(width = .5, outlier.color = NA) +
-  stat_summary(fun.y="mean", geom="point", size=3,
-    position=position_dodge(width=0.75), color="black")+
+    geom_jitter(width = .25, size = .3, alpha = .5) + 
+    stat_summary(fun.y="mean", geom="point", size=3,  
+                 position=position_dodge(width=0.75), color="pink")+
     labs(x="Nome da série", y= "Avalição", fill="Pontos")
 
 
@@ -63,6 +67,7 @@ sumarios <- dados %>%
 ```
 Apesar de ser a série em média mais bem avaliada, Brooklyn Nine-Nine é consideravelmente inferior a The Big Bang Theory nas primeiras temporadas, porém, The Big Bang Theory teve um decréscimo com o decorrer das temporadas e acabou contabilizando uma avaliação média inferior a Brooklyn Nine-Nine 
 
+>> O que aconteceu com as outras duas?
 
 ##2.3 Qual das séries tem episódios de qualidade mais irregular segundo o IMDB?
 
@@ -84,7 +89,7 @@ sumarios$season <- as.numeric(as.character(sumarios$season))
 ```
 Observando os blox-plots da seção 2.1, percebe-se que Two And a Half Men é a série mais irregular segundo o IMDB, pois existe uma decrepância enorme a partir da 9° temporada da série, isso se deve ao fato da saída do ator Charlie Sheen que era muito aclamado na série.
 
-
+>> Usa um termo mais técnico do que espaçamento dos dados. E qual foi a medida que você considerou? Amplitude? IQR? Desvio padrão?
 
 ##Extra: O que tende a ser melhor? Inícios ou finais de séries/temporadas?
 
@@ -102,3 +107,5 @@ sumarios <- dados %>%
   labs(x="Temporada", y= "Avalição média", color="Nome da série")
 ```
   De acordo com o gráfico, os inícios das séries de comédia tendem a ser melhor que os finais, isso pode ser pelo fato do humor se tornar obsoleto com o decorrer das temporadas.
+  
+  >> Gostei da análise de início/fim de séries, mas não houve a de temporadas, correto? 
