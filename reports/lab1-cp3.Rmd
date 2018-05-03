@@ -1,0 +1,121 @@
+---
+title: "Problema 1 - Checkpoint 3"
+output:
+  html_notebook:
+    toc: yes
+    toc_float: yes
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float: yes
+---
+
+```{r setup, echo=FALSE, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(here)
+theme_set(theme_bw())
+```
+
+Analisaremos as temporadas das séries de comédia: The Big Bang Theory, Brooklyn Nine-Nine, Modern Family, Two And a Half Men
+
+```{r}
+dados = read_csv(here("data/series_from_imdb.csv"), 
+                    progress = FALSE,
+                    col_types = cols(.default = col_double(), 
+                                     series_name = col_character(), 
+                                     episode = col_character(), 
+                                     url = col_character(),
+                                     season = col_character()))
+```
+
+
+#1. A má avaliação de uma temporada implica no cancelamento da série?
+### Para responder essa pergunta irei selecionar 6 séries que foram canceladas para tomar como dado base, e analisar o desenvolvimento das suas avaliações médias por temporada.
+```{r}
+sumarios = dados %>% 
+      filter(series_name %in% c("2 Broke Girls","Sense8", "The Killing", "House of Cards","Heroes","Under The Dome"))%>%
+    group_by(series_name,season) %>% 
+    summarise(
+        season_rating = round(mean(user_rating),2))
+
+  sumarios$season <- as.numeric(as.character(sumarios$season))
+  ggplot(sumarios ,aes(x = season, y = season_rating, color = series_name,group=series_name)) + 
+  geom_line() + 
+  geom_point() +
+  scale_x_continuous(breaks = (1:12))+
+  labs(x="Temporada", y= "Avalição média", color="Nome da série")
+
+```
+  Usando um gráfico de linhas, o qual representa a avalição média por temporada de cada série cancelada. É visualizado que não existe um padrão de má avaliação como motivo de cancelamento da série. Séries como Under The Dome, 2 Broke Girls, e Heroes, tiveram um decaimento na sua avalição média, por outro lado, séries como The Killing, Sense8 e House of Cards tiveram boas e crescentes avaliações, mesmo assim foram canceladas. Logo, apenas a má avaliação de uma temporada não implica no cancelamento da série, existem outros fatores que podem infligir no cancelamento da série, como alto orçamento(No caso de sense8), polêmica com o protagonista(House of Cards), ou falta de audiência no caso de The Killing.
+  
+##1.1. Observando os dados da questão 1, é possível afirmar que existiu um decaímento na audiência nas séries que tiveram uma baixa na avaliação média? 
+### Para responder essa pergunta irei analisar a quantidade de votos das séries que tiveram uma queda na avaliação média com o decorrer das temproadas: Under The Dome, Heroes e 2 Broke Girls.
+```{r}
+
+sumarios = dados %>% 
+      filter(series_name %in% c("2 Broke Girls","Sense8", "The Killing", "House of Cards","Heroes","Under The Dome"))%>%
+    group_by(series_name,season) %>% 
+    summarise(
+        season_votes = round(mean(user_votes),2))
+
+  sumarios$season <- as.numeric(as.character(sumarios$season))
+  ggplot(sumarios ,aes(x = season, y = season_votes, color = series_name,group=series_name)) + 
+  geom_line() + 
+  geom_point() +
+  scale_x_continuous(breaks = (1:12))+
+  labs(x="Temporada", y= "Quantidade de votos", color="Nome da série")
+
+
+
+```
+Através de um gráfico de linhas, é possível afirmar que existiu sim um decaímento na audiência das séries que tiveram uma baixa na avaliação média por temporada, existindo assim uma relação entre avaliação média, quantidade de votos e o cancelamento dessas 3 séries.
+
+
+
+#2. Os episódios que recebem mais votação são episódios mais amados ou mais odiados?
+### Para responder essa questão, irei selecionar episódios que obtiveram mais de 10 mil votos no IMDB, e então analisar a quantidade de votos máximo e a quantidade de votos mínimo de cada episódio.
+```{r}
+
+dados = dados %>% 
+       filter(user_votes > 10000) %>%
+      mutate(
+        rank_odiados = row_number(r1), # maior = mais odiado
+        rank_amados = row_number(r10), # maior = mais amado
+        amado_odiado = rank_amados * rank_odiados) # maior = mais amado E odiado
+
+dados %>%
+    ggplot(aes(
+        x = r1,
+        y = r10,
+        size = amado_odiado,
+        label = season_ep
+    )) +
+    geom_point(alpha = .7) +
+    geom_text(nudge_x = .001, nudge_y = -.01) 
+``` 
+
+Utilizando um gráfico de bolas, onde o eixo Y representa a porcentagem de votos máximo e o eixo X representa a porcentagem de votos mínima. Claramente é vizualizado que os episódios que recebem mais votação são episódios mais amados, pois a maioria das bolas se concentram na parte esquerda-superior do gráfico, comprovando que esses episódios tiveram maior número de notas 10.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
