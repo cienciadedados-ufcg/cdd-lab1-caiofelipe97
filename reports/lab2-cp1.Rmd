@@ -1,0 +1,71 @@
+---
+title: "Problema 2 - Checkpoint 1"
+output:
+  html_notebook:
+    toc: yes
+    toc_float: yes
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float: yes
+---
+
+```{r setup, echo=FALSE, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(here)
+library(plotly)
+library(viridis)
+theme_set(theme_bw())
+```
+
+
+Analisaremos as temporadas das séries de comédia: The Big Bang Theory, Brooklyn Nine-Nine, Modern Family, Two And a Half Men
+
+```{r}
+dados = read_csv(here("data/series_from_imdb.csv"), 
+                    progress = FALSE,
+                    col_types = cols(.default = col_double(), 
+                                     series_name = col_character(), 
+                                     episode = col_character(), 
+                                     url = col_character(),
+                                     season = col_character()))
+```
+
+##1 Qual das séries que você escolheu é mais bem avaliada no IMDB? A diferença é grande? Pequena?
+```{r}
+dados = dados %>% 
+    filter(series_name %in% c("Two And a Half Men", "The Big Bang Theory","Brooklyn Nine-Nine","Modern Family"))
+dados$season <- as.numeric((dados$season))
+
+sumarios = dados %>% 
+    group_by(series_name,season) %>% 
+    summarise(
+        season_rating = round(mean(user_rating),2))
+  sumarios$season <- as.numeric((sumarios$season))
+
+ggplotly( sumarios %>%
+    ggplot(aes(x = season, y = season_rating, color = series_name,group=series_name)) + 
+  geom_line() + 
+  geom_point() +
+  scale_x_continuous(breaks = (1:12))+
+  labs(x="Temporada", y= "Avalição média", color="Nome da série"),
+  tooltip = c("season_rating"))
+
+```
+
+##2.1. Observando o gráfico gerado na questão 2, os episódios mais amados são mais votados?
+### Para responder essa questão, irei selecionar os mesmos episódios que obtiveram mais de 10 mil votos, e analisarei os que tiveram mais votos 10.
+
+```{r}
+newData = dados %>% 
+       filter(user_votes > 8000) %>%
+        mutate(
+        rank_odiados = row_number(r1), # maior = mais odiado
+        rank_amados = row_number(r10)) # maior = mais amado
+
+
+plot_ly( newData,x = newData$r1, y = newData$r10, 
+        text = paste("Número de votos: ", newData$user_votes),
+        mode = "markers", color = newData$user_votes, size = newData$user_votes)
+``` 
+Utilizando um gráfico de bolas, e analizando os mesmos episódios com mais de 10 mil votos da questão 2, é possível analisar que existe uma tendência aos episódios com maior número de votos serem os episódios com maior número de notas 10.
