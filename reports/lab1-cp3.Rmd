@@ -47,115 +47,63 @@ sumarios = dados %>%
   labs(x="Temporada", y= "Avalição média", color="Nome da série")
 
 ```
-  Usando um gráfico de linhas, o qual representa a avalição média por temporada de cada série cancelada. É visualizado que não existe um padrão de má avaliação como motivo de cancelamento da série. Séries como Under The Dome, 2 Broke Girls, e Heroes, tiveram um decaimento na sua avalição média, por outro lado, séries como The Killing, Sense8 e House of Cards tiveram boas e crescentes avaliações, mesmo assim foram canceladas. Logo, apenas a má avaliação de uma temporada não implica no cancelamento da série, existem outros fatores que podem infligir no cancelamento da série, como alto orçamento(No caso de sense8), polêmica com o protagonista(House of Cards), ou falta de audiência no caso de The Killing.
+  Usando um gráfico de linhas, o qual representa a avalição média por temporada de cada série cancelada. É visualizado que não existe um padrão de má avaliação como motivo de cancelamento da série. Séries como Under The Dome, 2 Broke Girls, e Heroes, tiveram um decaimento na sua avalição média, por outro lado, séries como The Killing, Sense8 e House of Cards tiveram boas e crescentes avaliações, mesmo assim foram canceladas. Logo, apenas a má avaliação de uma temporada não implica no cancelamento da série, existem outros fatores que podem infligir no cancelamento da série, como alto orçamento (No caso de sense8), polêmica com o protagonista (House of Cards), ou falta de audiência no caso de The Killing. Vamos investigar o caso da audiência.
   
-##1.1. Observando os dados da questão 1, é possível afirmar que existiu um constante decaímento na audiência nas séries que tiveram constante uma baixa na avaliação média? 
+##1.1. É possível afirmar que existiu um constante decaímento de audiência nas séries que tiveram constante baixa na avaliação média? 
 ### Para responder essa pergunta irei analisar a quantidade de votos das séries que tiveram uma queda na avaliação média com o decorrer das temproadas: Under The Dome, Heroes.
+
 ```{r}
-
 sumarios = dados %>% 
-      filter(series_name %in% c("Heroes","Under The Dome"))%>%
-    group_by(series_name,season) %>% 
+    filter(series_name %in% c("Heroes","Under The Dome")) %>%
+    group_by(series_name, season) %>% 
     summarise(
-        season_votes = round(mean(user_votes),2))
-    sumarios$season <- as.numeric(as.character(sumarios$season))
-  
-
-ggplot(sumarios ,aes(x = season, y = season_votes, color = series_name,group=series_name)) + 
-  geom_line() + 
-  geom_point() +
-  scale_x_continuous(breaks = (1:12))+
-  labs(x="Temporada", y= "Quantidade de votos", color="Nome da série")
-
-
-
+         season_rating = round(mean(user_rating), 2),
+         season_votes = round(mean(user_votes), 2)) %>%
+    mutate(season = as.numeric(as.character(season)))
 ```
+
 ```{r}
-
-sumarios = dados %>% 
-      filter(series_name %in% c("Heroes","Under The Dome"))%>%
-    group_by(series_name,season) %>% 
-    summarise(
-         season_rating = round(mean(user_rating),2))
-    sumarios$season <- as.numeric(as.character(sumarios$season))
-  
-
-ggplot(sumarios ,aes(x = season, y = season_rating, color = series_name,group=series_name)) + 
-  geom_line() + 
+ggplot(sumarios, aes(x = season_rating, y = season_votes, color=series_name)) + 
   geom_point() +
-  scale_x_continuous(breaks = (1:12))+
-  labs(x="Temporada", y= "Avliação média", color="Nome da série")
-
-
-
+  labs(x="Avaliação", y= "Quantidade de votos", color="Nome da série")
 ```
-Através de dois gráficos de linhas, percebe-se que a quantidade de votos diminuiram com o decorrer das séries, assim como a avaliação média, existindo assim uma associação entre avaliação média, quantidade de votos e o cancelamento dessas 2 séries.
 
+Pelo gráfico de distribuição, vemos que _para cada série_ parece haver correlação entre quantidade de avaliação e número de votos. 
+Contudo, a quantidade de observações (número de pontos) é muito pouca e não é suficiente para afirmarmos que há relação entre essas duas variáveis (númeor de votos e avaliação média), mesmo que seja apenas para o caso de seríes cuja avaliação média teve constante baixa.
 
 
 #2. Os episódios que recebem mais votação são episódios mais amados ou mais odiados?
 ### Para responder essa questão, irei selecionar episódios que obtiveram mais de 10 mil votos no IMDB, e então analisar a quantidade de votos máximo e a quantidade de votos mínimo de cada episódio.
 ```{r}
-
 dados = dados %>% 
-       filter(user_votes > 10000) %>%
-      mutate(
+    filter(user_votes > 10000) %>%
+    mutate(
         rank_odiados = row_number(r1), # maior = mais odiado
         rank_amados = row_number(r10), # maior = mais amado
         amado_odiado = rank_amados * rank_odiados) # maior = mais amado E odiado
 
 dados %>%
-    ggplot(aes(
-        x = r1,
-        y = r10,
-        size = amado_odiado,
-        label = season_ep
-    )) +
-    geom_point(alpha = .7) +
-    geom_text(nudge_x = .001, nudge_y = -.01) +
-    labs(x="% Odiados", y= "% Amados", size ="Amado e Odiado")
+    ggplot(aes(x = r1, y = r10)) +
+    geom_point(alpha = .3) +
+    scale_x_continuous(limits=c(0,1)) +
+    labs(x="% Odiados", y= "% Amados")
 ``` 
 
-Utilizando um gráfico de bolas, onde o eixo Y representa a porcentagem de votos máximo e o eixo X representa a porcentagem de votos mínima. Claramente é vizualizado que os episódios que recebem mais votação são episódios mais amados, pois a maioria das bolas se concentram na parte esquerda-superior do gráfico, comprovando que esses episódios tiveram maior número de notas 10.
+Utilizando um gráfico de bolas, onde o eixo Y representa a porcentagem de votos máximos e o eixo X representa a porcentagem de votos mínimos. 
+A maioria dos pontos se concentra em uma baixa porcentagem no eixo x (ou seja, foram pouco odiados). Como estamos analisando apenas episódios com muitos votos, podemos concluir que episódios tiveram mais de 10 mil votos dificilmente foram odiados. Além disso, há muitos pontos que estão acima de 0.5 no eixo y. Ou seja, há muitos episódios com alta votação cuja maioria de nota é 10. Portanto, o episódios com muitas votos normalmente foram episódios que agradaram bastante o público.
+
 
 ##2.1. Observando o gráfico gerado na questão 2, os episódios mais amados são mais votados?
 ### Para responder essa questão, irei selecionar os mesmos episódios que obtiveram mais de 10 mil votos, e analisarei os que tiveram mais votos 10.
 
 ```{r}
-newData = dados %>% 
-       filter(user_votes > 10000) %>%
-      mutate(
-        rank_odiados = row_number(r1), # maior = mais odiado
-        rank_amados = row_number(r10)) # maior = mais amado
-
-newData %>%
+dados %>%
     ggplot(aes(
         x = r1,
         y = r10,
-        size = user_votes,
-        label = season_ep
+        size = user_votes
     )) +
-    geom_point(alpha = .7) +
-    geom_text(nudge_x = .001, nudge_y = -.01)  +
+    geom_point(alpha = .3) +
     labs(x="% de odiados", y= "% de amados", size ="Número de votos")
-
 ``` 
 Utilizando um gráfico de bolas, e analizando os mesmos episódios com mais de 10 mil votos da questão 2, é possível analisar que existe uma tendência aos episódios com maior número de votos serem os episódios com maior número de notas 10.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
